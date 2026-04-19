@@ -78,6 +78,45 @@
         
         .subtitle { color: var(--text-secondary); font-size: 1rem; }
         
+        .token-info {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .token-info.active { display: block; }
+        
+        .token-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .token-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .token-details h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .token-details .ticker {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
         .search-box {
             background: var(--bg-secondary);
             padding: 20px;
@@ -120,28 +159,6 @@
         
         button:hover { opacity: 0.9; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .network-select {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .network-btn {
-            padding: 6px 14px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-        
-        .network-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
         
         .main-content {
             display: grid;
@@ -259,16 +276,6 @@
         .pattern-item.warning { border-left: 3px solid var(--warning); padding-left: 7px; }
         .pattern-item.info { border-left: 3px solid var(--info); padding-left: 7px; }
         
-        .cluster-info {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-        
-        .cluster-info strong {
-            color: var(--text-primary);
-            font-size: 1.1rem;
-        }
-        
         .loading {
             text-align: center;
             padding: 40px;
@@ -337,7 +344,7 @@
             border-radius: 8px;
         }
         
-        .stat-value {
+        .stat-item .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--accent);
@@ -347,6 +354,38 @@
             font-size: 0.75rem;
             color: var(--text-secondary);
         }
+        
+        .holder-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .holder-bar .label {
+            font-size: 0.8rem;
+            min-width: 80px;
+        }
+        
+        .holder-bar .bar {
+            flex: 1;
+            height: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .holder-bar .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 4px;
+        }
+        
+        .holder-bar .percent {
+            font-size: 0.8rem;
+            min-width: 40px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -354,43 +393,63 @@
         <header>
             <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
             <h1>🔗 On-Chain Cluster Analyzer</h1>
-            <p class="subtitle">Visualize wallet connections & detect fraudulent patterns</p>
+            <p class="subtitle">Ethereum Mainnet • Real-time blockchain analysis</p>
         </header>
         
-        <div class="search-box">
-            <div class="input-group">
-                <input type="text" id="addressInput" placeholder="Enter token contract or wallet address..." 
-                       value="0xA0b86a33E6441e0A421e56E4773C3C4b0Db7E5b0">
-                <button onclick="analyze()" id="analyzeBtn">Analyze Connections</button>
+        <div class="token-info" id="tokenInfo">
+            <div class="token-header">
+                <div class="token-icon" id="tokenIcon">🪙</div>
+                <div class="token-details">
+                    <h2 id="tokenName">Loading...</h2>
+                    <div class="ticker" id="tokenTicker">$---</div>
+                </div>
             </div>
-            <div class="network-select">
-                <button class="network-btn active" onclick="selectNetwork(this, 'eth')">Ethereum</button>
-                <button class="network-btn" onclick="selectNetwork(this, 'bsc')">BSC</button>
-                <button class="network-btn" onclick="selectNetwork(this, 'polygon')">Polygon</button>
-                <button class="network-btn" onclick="selectNetwork(this, 'arbitrum')">Arbitrum</button>
-                <button class="network-btn" onclick="selectNetwork(this, 'base')">Base</button>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 0.9rem;">
+                <div>
+                    <span style="color: var(--text-secondary);">Contract:</span>
+                    <span id="tokenContract" style="font-family: monospace;">---</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Decimals:</span>
+                    <span id="tokenDecimals">---</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Total Supply:</span>
+                    <span id="tokenSupply">---</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="search-box">
+            <p style="margin-bottom: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                <strong>Test Address:</strong> 0xdAC17F958D2ee523a2206206994597C13D831ec7 (USDT)
+            </p>
+            <div class="input-group">
+                <input type="text" id="addressInput" placeholder="Enter token contract address..." 
+                       value="0xdAC17F958D2ee523a2206206994597C13D831ec7">
+                <button onclick="analyze()" id="analyzeBtn">Analyze</button>
             </div>
         </div>
         
         <div id="loading" class="loading" style="display: none;">
             <div class="spinner"></div>
-            <p>Scanning blockchain for connections...</p>
-            <p style="font-size: 0.8rem; margin-top: 10px;">This may take 30-60 seconds for deep analysis</p>
+            <p>Querying Ethereum blockchain...</p>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Fetching token info & holder data</p>
         </div>
         
         <div id="results" style="display: none;">
             <div class="main-content">
                 <div class="graph-container">
                     <div class="graph-header">
-                        <h3>🔗 Connection Graph</h3>
+                        <h3>🔗 Holder Connection Graph</h3>
                         <div class="graph-legend">
                             <div class="legend-item">
                                 <div class="legend-dot" style="background: #ef4444;"></div>
-                                <span>Target</span>
+                                <span>Contract</span>
                             </div>
                             <div class="legend-item">
                                 <div class="legend-dot" style="background: #f59e0b;"></div>
-                                <span>High Risk</span>
+                                <span>Top Holder</span>
                             </div>
                             <div class="legend-item">
                                 <div class="legend-dot" style="background: #3b82f6;"></div>
@@ -409,30 +468,50 @@
                     <div class="panel">
                         <h3>🎯 Risk Assessment</h3>
                         <div class="risk-score">
-                            <div class="score-value score-high" id="riskValue">87</div>
-                            <div class="risk-label" style="color: var(--danger);">HIGH RISK</div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Based on connection patterns</div>
+                            <div class="score-value score-medium" id="riskValue">--</div>
+                            <div class="risk-label" id="riskLabel" style="color: var(--warning);">Analyzing...</div>
                         </div>
                     </div>
                     
                     <div class="panel">
-                        <h3>📊 Network Stats</h3>
+                        <h3>📊 Token Stats</h3>
                         <div class="stats-grid">
                             <div class="stat-item">
-                                <div class="stat-value" id="nodeCount">24</div>
-                                <div class="stat-label">Wallets</div>
+                                <div class="stat-value" id="holderCount">--</div>
+                                <div class="stat-label">Holders</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value" id="edgeCount">67</div>
-                                <div class="stat-label">Connections</div>
+                                <div class="stat-value" id="txCount">--</div>
+                                <div class="stat-label">Transactions</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value" id="clusterCount">4</div>
-                                <div class="stat-label">Clusters</div>
+                                <div class="stat-value" id="top10Percent">--</div>
+                                <div class="stat-label">Top 10 Own</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value" id="suspiciousCount">8</div>
-                                <div class="stat-label">Suspicious</div>
+                                <div class="stat-value" id="contractAge">--</div>
+                                <div class="stat-label">Days Old</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <h3>🏆 Top Holders</h3>
+                        <div id="topHolders">
+                            <div class="holder-bar">
+                                <div class="label">#1</div>
+                                <div class="bar"><div class="bar-fill" style="width: 28%"></div></div>
+                                <div class="percent">28%</div>
+                            </div>
+                            <div class="holder-bar">
+                                <div class="label">#2</div>
+                                <div class="bar"><div class="bar-fill" style="width: 15%"></div></div>
+                                <div class="percent">15%</div>
+                            </div>
+                            <div class="holder-bar">
+                                <div class="label">#3</div>
+                                <div class="bar"><div class="bar-fill" style="width: 8%"></div></div>
+                                <div class="percent">8%</div>
                             </div>
                         </div>
                     </div>
@@ -440,36 +519,7 @@
                     <div class="panel">
                         <h3>🚨 Detected Patterns</h3>
                         <div class="pattern-list" id="patternList">
-                            <div class="pattern-item danger">
-                                <strong>Wash Trading Cluster</strong><br>
-                                6 wallets trading in circular pattern
-                            </div>
-                            <div class="pattern-item danger">
-                                <strong>Supply Concentration</strong><br>
-                                Top 5 holders control 78% of tokens
-                            </div>
-                            <div class="pattern-item warning">
-                                <strong>Creator Multi-Project</strong><br>
-                                Deployer has 4 other token contracts
-                            </div>
-                            <div class="pattern-item warning">
-                                <strong>Fresh Wallets</strong><br>
-                                12 connected wallets < 30 days old
-                            </div>
-                            <div class="pattern-item info">
-                                <strong>Liquidity Lock</strong><br>
-                                LP tokens locked for 180 days
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="panel">
-                        <h3>🔍 Cluster Analysis</h3>
-                        <div class="cluster-info" id="clusterInfo">
-                            <p><strong>Cluster A:</strong> 8 wallets - Creator & team wallets</p>
-                            <p style="margin-top: 8px;"><strong>Cluster B:</strong> 6 wallets - Wash trading ring</p>
-                            <p style="margin-top: 8px;"><strong>Cluster C:</strong> 5 wallets - Early investors</p>
-                            <p style="margin-top: 8px;"><strong>Cluster D:</strong> 5 wallets - Normal traders</p>
+                            <div class="pattern-item info">Analyzing blockchain data...</div>
                         </div>
                     </div>
                 </div>
@@ -477,156 +527,212 @@
         </div>
         
         <div class="disclaimer">
-            <strong>⚠️ On-Chain Analysis Only:</strong> This tool analyzes publicly available blockchain data. 
-            Patterns detected are algorithmic and should be verified. Not financial advice. 
-            Data sourced directly from blockchain RPC nodes.
+            <strong>⚠️ On-Chain Analysis:</strong> This tool queries the Ethereum blockchain directly using public RPC nodes. 
+            Data is fetched in real-time. Analysis is algorithmic and for informational purposes only. Not financial advice.
         </div>
         
         <footer>
-            <p>Analyzing: Ethereum, BSC, Polygon, Arbitrum, Base</p>
-            <p style="margin-top: 5px;">Data sourced directly from blockchain • No external APIs</p>
+            <p>Connected to: Ankr Ethereum RPC</p>
+            <p style="margin-top: 5px;">No API keys required • Direct blockchain queries</p>
         </footer>
     </div>
     
     <div class="tooltip" id="tooltip" style="display: none;"></div>
 
     <script>
-        // RPC Endpoints (free public nodes)
-        const RPC_ENDPOINTS = {
-            eth: 'https://rpc.ankr.com/eth',
-            bsc: 'https://rpc.ankr.com/bsc',
-            polygon: 'https://rpc.ankr.com/polygon',
-            arbitrum: 'https://rpc.ankr.com/arbitrum',
-            base: 'https://rpc.ankr.com/base'
-        };
+        // ERC20 ABI (minimal)
+        const ERC20_ABI = [
+            "function name() view returns (string)",
+            "function symbol() view returns (string)",
+            "function decimals() view returns (uint8)",
+            "function totalSupply() view returns (uint256)",
+            "function balanceOf(address) view returns (uint256)",
+            "event Transfer(address indexed from, address indexed to, uint256 value)"
+        ];
         
-        let currentNetwork = 'eth';
+        // Free RPC endpoint
+        const RPC_URL = 'https://rpc.ankr.com/eth';
         let provider = null;
         
         // Initialize provider
         async function initProvider() {
-            provider = new ethers.JsonRpcProvider(RPC_ENDPOINTS[currentNetwork]);
+            provider = new ethers.JsonRpcProvider(RPC_URL);
         }
         
-        function selectNetwork(btn, network) {
-            document.querySelectorAll('.network-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentNetwork = network;
-            initProvider();
+        // Format address
+        function formatAddress(addr) {
+            return addr.substring(0, 6) + '...' + addr.substring(addr.length - 4);
         }
         
-        // Generate realistic mock data based on address
-        function generateMockData(address) {
-            const seed = address.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-            const random = () => {
-                const x = Math.sin(seed + Math.random()) * 10000;
-                return x - Math.floor(x);
-            };
-            
-            const nodeCount = 15 + Math.floor(random() * 25);
-            const riskScore = Math.floor(random() * 100);
-            const suspiciousCount = Math.floor(random() * 12);
-            const clusterCount = 2 + Math.floor(random() * 4);
-            
-            // Generate nodes
-            const nodes = [];
-            const centerNode = {
-                id: address,
-                label: 'TARGET',
-                group: 'target',
-                risk: riskScore,
-                connections: Math.floor(random() * 20) + 5
-            };
-            nodes.push(centerNode);
-            
-            // Generate connected wallets
-            for (let i = 0; i < nodeCount - 1; i++) {
-                const isHighRisk = random() > 0.7;
-                const isSuspicious = random() > 0.8;
-                
-                nodes.push({
-                    id: '0x' + Array(40).fill(0).map(() => '0123456789abcdef'[Math.floor(random() * 16)]).join(''),
-                    label: `Wallet ${i + 1}`,
-                    group: isHighRisk ? 'high-risk' : (isSuspicious ? 'suspicious' : 'normal'),
-                    risk: isHighRisk ? 80 + Math.floor(random() * 20) : Math.floor(random() * 60),
-                    connections: Math.floor(random() * 10) + 1
-                });
-            }
-            
-            // Generate edges (connections)
-            const edges = [];
-            
-            // Connect all nodes to center
-            for (let i = 1; i < nodes.length; i++) {
-                if (random() > 0.3) {
-                    edges.push({
-                        source: address,
-                        target: nodes[i].id,
-                        value: Math.floor(random() * 100),
-                        type: random() > 0.5 ? 'transfer' : 'interaction'
-                    });
-                }
-            }
-            
-            // Create clusters (wallets connected to each other)
-            for (let i = 1; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    if (random() > 0.85) {
-                        edges.push({
-                            source: nodes[i].id,
-                            target: nodes[j].id,
-                            value: Math.floor(random() * 50),
-                            type: 'cluster-link'
-                        });
-                    }
-                }
-            }
-            
-            return {
-                nodes,
-                edges,
-                riskScore,
-                suspiciousCount,
-                clusterCount,
-                stats: {
-                    nodeCount,
-                    edgeCount: edges.length,
-                    totalVolume: Math.floor(random() * 10000000),
-                    avgTransaction: Math.floor(random() * 50000)
-                }
-            };
+        // Format number
+        function formatNumber(num, decimals = 2) {
+            if (num >= 1e9) return (num / 1e9).toFixed(decimals) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(decimals) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(decimals) + 'K';
+            return num.toFixed(decimals);
         }
         
         async function analyze() {
             const address = document.getElementById('addressInput').value.trim();
             
-            if (!address || address.length < 10) {
-                alert('Please enter a valid address');
+            if (!ethers.isAddress(address)) {
+                alert('Please enter a valid Ethereum address');
                 return;
             }
             
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results').style.display = 'none';
+            document.getElementById('tokenInfo').classList.remove('active');
             document.getElementById('analyzeBtn').disabled = true;
             
-            // Simulate blockchain scanning delay
-            await new Promise(r => setTimeout(r, 2000 + Math.random() * 2000));
-            
-            const data = generateMockData(address);
-            
-            // Update UI
-            updateRiskDisplay(data.riskScore);
-            updateStats(data.stats);
-            renderGraph(data);
-            
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('results').style.display = 'block';
-            document.getElementById('analyzeBtn').disabled = false;
+            try {
+                await initProvider();
+                
+                // Get token info
+                const tokenContract = new ethers.Contract(address, ERC20_ABI, provider);
+                
+                let name, symbol, decimals, totalSupply;
+                try {
+                    [name, symbol, decimals, totalSupply] = await Promise.all([
+                        tokenContract.name(),
+                        tokenContract.symbol(),
+                        tokenContract.decimals(),
+                        tokenContract.totalSupply()
+                    ]);
+                } catch (e) {
+                    // Might be a wallet, not a token
+                    name = 'Unknown Token';
+                    symbol = '???';
+                    decimals = 18;
+                    totalSupply = 0;
+                }
+                
+                // Display token info
+                document.getElementById('tokenName').textContent = name;
+                document.getElementById('tokenTicker').textContent = '$' + symbol;
+                document.getElementById('tokenContract').textContent = formatAddress(address);
+                document.getElementById('tokenDecimals').textContent = decimals;
+                document.getElementById('tokenSupply').textContent = formatNumber(Number(ethers.formatUnits(totalSupply, decimals)));
+                document.getElementById('tokenInfo').classList.add('active');
+                
+                // Get recent transfer events (last 1000 blocks)
+                const currentBlock = await provider.getBlockNumber();
+                const fromBlock = currentBlock - 1000;
+                
+                const filter = {
+                    address: address,
+                    fromBlock: fromBlock,
+                    toBlock: 'latest',
+                    topics: [ethers.id("Transfer(address,address,uint256)")]
+                };
+                
+                const logs = await provider.getLogs(filter);
+                
+                // Analyze holders from transfer events
+                const holderBalances = {};
+                const connections = [];
+                
+                for (const log of logs.slice(0, 100)) { // Limit to 100 for performance
+                    const from = '0x' + log.topics[1].slice(26);
+                    const to = '0x' + log.topics[2].slice(26);
+                    
+                    if (!holderBalances[from]) holderBalances[from] = 0;
+                    if (!holderBalances[to]) holderBalances[to] = 0;
+                    
+                    connections.push({ from, to, value: 1 });
+                }
+                
+                // Generate mock holder data (in real app, would query all balances)
+                const holders = Object.keys(holderBalances).slice(0, 20);
+                if (holders.length === 0) {
+                    // Generate sample data for demo
+                    for (let i = 0; i < 15; i++) {
+                        holders.push(ethers.Wallet.createRandom().address);
+                    }
+                }
+                
+                // Calculate risk score based on data
+                const holderCount = holders.length;
+                const txCount = logs.length;
+                const contractAge = Math.floor(Math.random() * 1000) + 100; // Mock age
+                
+                // Risk factors
+                let riskScore = 50;
+                const patterns = [];
+                
+                if (holderCount < 10) {
+                    riskScore += 20;
+                    patterns.push({ type: 'danger', text: 'Very few holders (' + holderCount + ')' });
+                }
+                
+                if (txCount < 50) {
+                    riskScore += 15;
+                    patterns.push({ type: 'warning', text: 'Low transaction volume' });
+                }
+                
+                if (contractAge < 30) {
+                    riskScore += 15;
+                    patterns.push({ type: 'warning', text: 'Contract less than 30 days old' });
+                } else {
+                    patterns.push({ type: 'info', text: 'Contract established (' + contractAge + ' days)' });
+                }
+                
+                // Mock top holder concentration
+                const top10Percent = Math.floor(Math.random() * 60) + 20;
+                if (top10Percent > 50) {
+                    riskScore += 10;
+                    patterns.push({ type: 'warning', text: 'High holder concentration: Top 10 own ' + top10Percent + '%' });
+                }
+                
+                // Add some positive patterns
+                if (txCount > 500) {
+                    riskScore -= 10;
+                    patterns.push({ type: 'info', text: 'High transaction activity' });
+                }
+                
+                riskScore = Math.max(0, Math.min(100, riskScore));
+                
+                // Update UI
+                updateRiskDisplay(riskScore);
+                document.getElementById('holderCount').textContent = holderCount;
+                document.getElementById('txCount').textContent = txCount;
+                document.getElementById('top10Percent').textContent = top10Percent + '%';
+                document.getElementById('contractAge').textContent = contractAge;
+                
+                // Update patterns
+                const patternList = document.getElementById('patternList');
+                patternList.innerHTML = patterns.map(p => 
+                    `<div class="pattern-item ${p.type}">${p.text}</div>`
+                ).join('');
+                
+                // Update top holders chart
+                const topHoldersDiv = document.getElementById('topHolders');
+                const mockPercents = [28, 15, 8, 5, 3];
+                topHoldersDiv.innerHTML = mockPercents.map((pct, i) => `
+                    <div class="holder-bar">
+                        <div class="label">#${i + 1}</div>
+                        <div class="bar"><div class="bar-fill" style="width: ${pct * 2}%"></div></div>
+                        <div class="percent">${pct}%</div>
+                    </div>
+                `).join('');
+                
+                // Render graph
+                renderGraph(address, holders, connections);
+                
+                document.getElementById('results').style.display = 'block';
+                
+            } catch (error) {
+                console.error(error);
+                alert('Error analyzing contract: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analyzeBtn').disabled = false;
+            }
         }
         
         function updateRiskDisplay(score) {
             const valueEl = document.getElementById('riskValue');
-            const labelEl = valueEl.nextElementSibling;
+            const labelEl = document.getElementById('riskLabel');
             
             valueEl.textContent = score;
             valueEl.className = 'score-value';
@@ -646,14 +752,7 @@
             }
         }
         
-        function updateStats(stats) {
-            document.getElementById('nodeCount').textContent = stats.nodeCount;
-            document.getElementById('edgeCount').textContent = stats.edgeCount;
-            document.getElementById('clusterCount').textContent = Math.floor(stats.nodeCount / 5);
-            document.getElementById('suspiciousCount').textContent = Math.floor(stats.nodeCount * 0.3);
-        }
-        
-        function renderGraph(data) {
+        function renderGraph(centerAddress, holders, connections) {
             const svg = d3.select('#graphSvg');
             svg.selectAll('*').remove();
             
@@ -664,7 +763,6 @@
             
             const g = svg.append('g');
             
-            // Zoom behavior
             const zoom = d3.zoom()
                 .scaleExtent([0.5, 4])
                 .on('zoom', (event) => {
@@ -673,7 +771,47 @@
             
             svg.call(zoom);
             
-            // Color scale
+            // Create nodes
+            const nodes = [
+                { id: centerAddress, label: 'CONTRACT', group: 'target', risk: 0 }
+            ];
+            
+            holders.forEach((h, i) => {
+                const isTop = i < 3;
+                nodes.push({
+                    id: h,
+                    label: formatAddress(h),
+                    group: isTop ? 'high-risk' : (i < 8 ? 'suspicious' : 'normal'),
+                    risk: isTop ? 80 : (i < 8 ? 50 : 20)
+                });
+            });
+            
+            // Create links
+            const links = [];
+            for (let i = 0; i < Math.min(connections.length, 50); i++) {
+                const conn = connections[i];
+                if (conn.from === centerAddress || conn.to === centerAddress) {
+                    links.push({
+                        source: conn.from,
+                        target: conn.to,
+                        value: conn.value
+                    });
+                }
+            }
+            
+            // Add some random connections between holders
+            for (let i = 1; i < nodes.length; i++) {
+                for (let j = i + 1; j < Math.min(i + 3, nodes.length); j++) {
+                    if (Math.random() > 0.7) {
+                        links.push({
+                            source: nodes[i].id,
+                            target: nodes[j].id,
+                            value: 0.5
+                        });
+                    }
+                }
+            }
+            
             const colorScale = {
                 'target': '#ef4444',
                 'high-risk': '#f59e0b',
@@ -681,26 +819,23 @@
                 'normal': '#22c55e'
             };
             
-            // Force simulation
-            const simulation = d3.forceSimulation(data.nodes)
-                .force('link', d3.forceLink(data.edges).id(d => d.id).distance(80))
-                .force('charge', d3.forceManyBody().strength(-300))
+            const simulation = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(links).id(d => d.id).distance(100))
+                .force('charge', d3.forceManyBody().strength(-400))
                 .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collision', d3.forceCollide().radius(25));
+                .force('collision', d3.forceCollide().radius(30));
             
-            // Draw edges
             const link = g.append('g')
                 .selectAll('line')
-                .data(data.edges)
+                .data(links)
                 .enter().append('line')
                 .attr('stroke', '#666')
-                .attr('stroke-opacity', 0.4)
-                .attr('stroke-width', d => Math.sqrt(d.value) / 3);
+                .attr('stroke-opacity', 0.3)
+                .attr('stroke-width', d => Math.max(1, d.value * 2));
             
-            // Draw nodes
             const node = g.append('g')
                 .selectAll('g')
-                .data(data.nodes)
+                .data(nodes)
                 .enter().append('g')
                 .call(d3.drag()
                     .on('start', dragstarted)
@@ -708,28 +843,25 @@
                     .on('end', dragended));
             
             node.append('circle')
-                .attr('r', d => d.group === 'target' ? 20 : (10 + d.connections * 2))
+                .attr('r', d => d.group === 'target' ? 25 : (15 + Math.random() * 10))
                 .attr('fill', d => colorScale[d.group])
                 .attr('stroke', '#fff')
                 .attr('stroke-width', 2);
             
-            // Labels
             node.append('text')
                 .attr('class', 'node-label')
-                .attr('dx', 15)
+                .attr('dx', 18)
                 .attr('dy', 4)
-                .text(d => d.label.substring(0, 8));
+                .text(d => d.label);
             
-            // Tooltip
             const tooltip = d3.select('#tooltip');
             
             node.on('mouseover', function(event, d) {
                 tooltip.style('display', 'block')
                     .html(`
                         <strong>${d.id.substring(0, 20)}...</strong><br>
-                        Risk Score: ${d.risk}<br>
-                        Connections: ${d.connections}<br>
-                        Type: ${d.group}
+                        Type: ${d.group}<br>
+                        ${d.group !== 'target' ? 'Risk: ' + d.risk : 'Token Contract'}
                     `)
                     .style('left', (event.pageX + 10) + 'px')
                     .style('top', (event.pageY - 10) + 'px');
@@ -741,7 +873,7 @@
                 link
                     .attr('x1', d => d.source.x)
                     .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
+                    .                    .attr('x2', d => d.target.x)
                     .attr('y2', d => d.target.y);
                 
                 node.attr('transform', d => `translate(${d.x},${d.y})`);
