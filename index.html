@@ -427,7 +427,7 @@
             <div class="input-group">
                 <input type="text" id="addressInput" placeholder="Enter token contract address..." 
                        value="0xdAC17F958D2ee523a2206206994597C13D831ec7">
-                <button onclick="analyze()" id="analyzeBtn">Analyze</button>
+                <button onclick="analyze(); return false;" id="analyzeBtn">Analyze</button>
             </div>
         </div>
         
@@ -922,6 +922,12 @@
             document.querySelector('.theme-toggle').textContent = next === 'dark' ? '🌙' : '☀️';
         }
         
+        // Simple test function
+        window.testButton = function() {
+            alert('JavaScript is working!');
+            return true;
+        };
+        
         // Initialize
         initProvider();
         
@@ -929,6 +935,9 @@
         document.getElementById('addressInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') analyze();
         });
+        
+        // Log that script loaded
+        console.log('Script loaded successfully');
     </script>
 </body>
 </html>
