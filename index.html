@@ -582,7 +582,9 @@
         }
         
         async function analyze() {
+            console.log('Analyze button clicked');
             const address = document.getElementById('addressInput').value.trim();
+            console.log('Address:', address);
             
             if (!ethers.isAddress(address)) {
                 alert('Please enter a valid Ethereum address');
@@ -595,7 +597,13 @@
             document.getElementById('analyzeBtn').disabled = true;
             
             try {
+                console.log('Initializing provider...');
                 await initProvider();
+                
+                // Test connection
+                console.log('Testing connection...');
+                const blockNumber = await provider.getBlockNumber();
+                console.log('Connected to Ethereum. Block:', blockNumber);
                 
                 // Get token info
                 const tokenContract = new ethers.Contract(address, ERC20_ABI, provider);
@@ -731,8 +739,8 @@
                 document.getElementById('results').style.display = 'block';
                 
             } catch (error) {
-                console.error(error);
-                alert('Error analyzing contract: ' + error.message);
+                console.error('Full error:', error);
+                alert('Error: ' + (error.message || 'Unknown error') + '\n\nCheck browser console (F12) for details.');
             } finally {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('analyzeBtn').disabled = false;
